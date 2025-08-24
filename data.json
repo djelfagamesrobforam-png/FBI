@@ -1,0 +1,16 @@
+[
+  {
+    "name": "أحمد حبشي",
+    "birth": "2001-03-12",
+    "wanted": true,
+    "image": "img/ahmed.jpg",
+    "notes": "تشاجر مع خاله في 2023"
+  },
+  {
+    "name": "زينب حبشي",
+    "birth": "2004-07-29",
+    "wanted": false,
+    "image": "img/zeinab.jpg",
+    "notes": "لا يوجد سوابق"
+  }
+]
