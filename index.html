@@ -223,7 +223,7 @@ searchInput.addEventListener("keypress", function(e) {
     loadingText.textContent = "جاري التحميل...";
     loadingScreen.style.display = "flex";
 
-    fetch(`http://localhost:5000/api/search?name=${encodeURIComponent(query)}`)
+    fetch(`https://fbi-mrmd.onrender.com/api/search?name=${encodeURIComponent(query)}`)
       .then(res => res.json())
       .then(person => {
         if (person.error || person.message) {
@@ -240,25 +240,25 @@ searchInput.addEventListener("keypress", function(e) {
           <div class="person-profile">
             <img src="${person.image}" alt="صورة الشخص">
             <div class="person-info">
-              <div class="info-section"><label>الاسم الكامل:</label><div>${person.name}</div></div>
-              <div class="info-section"><label>مكان الولادة:</label><div>${person.birthplace}</div></div>
-              <div class="info-section"><label>تاريخ الميلاد:</label><div>${person.birthdate}</div></div>
-              <div class="info-section"><label>العمر الحالي:</label><div>${person.current_age}</div></div>
-              <div class="info-section"><label>الحالة الاجتماعية:</label><div>${person.marital_status}</div></div>
-              <div class="info-section"><label>عدد الأولاد:</label><div>${person.children}</div></div>
-              <div class="info-section"><label>الممتلكات:</label><div>${person.belongings}</div></div>
-              <div class="info-section"><label>السوابق:</label><div>${person.records}</div></div>
-              <div class="info-section"><label>الحالة:</label>
+              <div class="info-section"><label>Full Name:</label><div>${person.name}</div></div>
+              <div class="info-section"><label>Birthplace:</label><div>${person.birthplace}</div></div>
+              <div class="info-section"><label>Birthdate:</label><div>${person.birthdate}</div></div>
+              <div class="info-section"><label>Current Age:</label><div>${person.current_age}</div></div>
+              <div class="info-section"><label>Marital Status:</label><div>${person.marital_status}</div></div>
+              <div class="info-section"><label>Children:</label><div>${person.children}</div></div>
+              <div class="info-section"><label>Belongings:</label><div>${person.belongings}</div></div>
+              <div class="info-section"><label>Records:</label><div>${person.records}</div></div>
+              <div class="info-section"><label>Status:</label>
                 <div class="status ${
                   person.wanted === 'true' ? 'wanted' :
                   person.wanted === 'false' ? 'not-wanted' :
                   person.wanted === 'exempt' ? 'exempted' : 'done-service'
                 }">
                   ${
-                    person.wanted === 'true' ? 'مطلوب للخدمة الوطنية' :
-                    person.wanted === 'false' ? 'غير مطلوب للخدمة الوطنية' :
-                    person.wanted === 'exempt' ? 'معفي من الخدمة الوطنية' :
-                    'تم اجتياز الخدمة الوطنية'
+                    person.wanted === 'true' ? 'Wanted for national service' :
+                    person.wanted === 'false' ? 'Not wanted for service' :
+                    person.wanted === 'exempt' ? 'Exempted from service' :
+                    'Service completed'
                   }
                 </div>
               </div>
@@ -269,12 +269,47 @@ searchInput.addEventListener("keypress", function(e) {
   }
 });
 
-function goHome() {
-  loadingScreen.style.display = "none";
-  personPage.style.display = "none";
-  mainPage.style.display = "block";
-  searchInput.value = "";
-}
+// ✅ إضافة شخص جديد
+const addPersonForm = document.getElementById("addPersonForm");
+addPersonForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const age = document.getElementById("age").value;
+  const photo = document.getElementById("photo").files[0];
+
+  // ⚠️ مبدئيًا نخلي الصورة عبارة عن path ثابت (لأن رفع الملفات مش شغال عبر API الحالي)
+  const imagePath = `photo/${photo.name}`;
+
+  const newPerson = {
+    name,
+    birthplace: "Unknown",
+    birthdate: "2000-01-01",
+    current_age: parseInt(age),
+    records: "None",
+    belongings: "None",
+    marital_status: "Single",
+    children: 0,
+    wanted: "false",
+    image: imagePath
+  };
+
+  try {
+    const res = await fetch("https://fbi-mrmd.onrender.com/api/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newPerson)
+    });
+
+    const data = await res.json();
+    alert(data.message || "Person added!");
+  } catch (err) {
+    alert("Error adding person: " + err.message);
+  }
+});
 </script>
+
+
+
 </body>
 </html>
