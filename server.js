@@ -148,7 +148,7 @@ app.post("/api/register", async (req, res) => {
 
 // ✅ تسجيل الدخول
 app.post("/api/login", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, deviceInfo } = req.body;
 
   const result = await pool.query("SELECT * FROM users WHERE username=$1", [username]);
   if (result.rows.length === 0) return res.json({ error: "User not found" });
@@ -157,6 +157,13 @@ app.post("/api/login", async (req, res) => {
   const match = await bcrypt.compare(password, user.password);
 
   if (match) {
+    // حفظ بيانات تسجيل الدخول
+    await pool.query(
+      `INSERT INTO user_logins (user_id, ip, user_agent, platform, language, login_time)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [user.id, deviceInfo.ip, deviceInfo.userAgent, deviceInfo.platform, deviceInfo.language]
+    );
+
     res.json({ message: "Login successful", user: { id: user.id, username: user.username } });
   } else {
     res.json({ error: "Invalid password" });
@@ -167,6 +174,7 @@ app.post("/api/login", async (req, res) => {
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
 
 
 
