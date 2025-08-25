@@ -201,12 +201,6 @@ input[type="text"]:focus {
     <div id="personContent"></div>
   </div>
 </div>
-<form id="addPersonForm">
-  <input type="text" id="name" placeholder="الاسم" required />
-  <input type="number" id="age" placeholder="العمر" required />
-  <input type="file" id="photo" accept="image/*" required />
-  <button type="submit">إضافة شخص</button>
-</form>
 
 <script>
 const searchInput = document.getElementById("searchName");
@@ -216,9 +210,11 @@ const personContent = document.getElementById("personContent");
 const loadingScreen = document.getElementById("loadingScreen");
 const loadingText = document.getElementById("loadingText");
 
+// البحث عن الأشخاص
 searchInput.addEventListener("keypress", function(e) {
   if (e.key === "Enter") {
     const query = this.value.trim();
+    if (!query) return;
 
     loadingText.textContent = "جاري التحميل...";
     loadingScreen.style.display = "flex";
@@ -226,13 +222,13 @@ searchInput.addEventListener("keypress", function(e) {
     fetch(`https://fbi-mrmd.onrender.com/api/search?name=${encodeURIComponent(query)}`)
       .then(res => res.json())
       .then(person => {
+        loadingScreen.style.display = "none";
+
         if (person.error || person.message) {
-          loadingText.innerHTML = "❌ الاسم غير صحيح";
-          setTimeout(() => location.reload(), 1000);
+          alert("❌ الاسم غير صحيح");
           return;
         }
 
-        loadingScreen.style.display = "none";
         mainPage.style.display = "none";
         personPage.style.display = "block";
 
@@ -265,49 +261,87 @@ searchInput.addEventListener("keypress", function(e) {
             </div>
           </div>
         `;
+      })
+      .catch(err => {
+        loadingScreen.style.display = "none";
+        alert("⚠️ حدث خطأ أثناء الاتصال بالخادم: " + err.message);
       });
   }
 });
 
-// ✅ إضافة شخص جديد
+// إضافة شخص جديد إذا كان النموذج موجودًا
 const addPersonForm = document.getElementById("addPersonForm");
-addPersonForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+if (addPersonForm) {
+  addPersonForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const name = document.getElementById("name").value;
-  const age = document.getElementById("age").value;
-  const photo = document.getElementById("photo").files[0];
+    const name = document.getElementById("name").value.trim();
+    const age = document.getElementById("age").value.trim();
+    const photo = document.getElementById("photo").files[0];
 
-  // ⚠️ مبدئيًا نخلي الصورة عبارة عن path ثابت (لأن رفع الملفات مش شغال عبر API الحالي)
-  const imagePath = `photo/${photo.name}`;
+    if (!name || !age || !photo) {
+      alert("الرجاء ملء جميع الحقول واختيار صورة");
+      return;
+    }
 
-  const newPerson = {
-    name,
-    birthplace: "Unknown",
-    birthdate: "2000-01-01",
-    current_age: parseInt(age),
-    records: "None",
-    belongings: "None",
-    marital_status: "Single",
-    children: 0,
-    wanted: "false",
-    image: imagePath
+    const imagePath = `photo/${photo.name}`; // مبدئيًا path ثابت
+
+    const newPerson = {
+      name,
+      birthplace: "Unknown",
+      birthdate: "2000-01-01",
+      current_age: parseInt(age),
+      records: "None",
+      belongings: "None",
+      marital_status: "Single",
+      children: 0,
+      wanted: "false",
+      image: imagePath
+    };
+
+    try {
+      const res = await fetch("https://fbi-mrmd.onrender.com/api/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPerson)
+      });
+
+      const data = await res.json();
+      alert(data.message || "تم إضافة الشخص بنجاح!");
+      addPersonForm.reset();
+    } catch (err) {
+      alert("⚠️ حدث خطأ أثناء الإضافة: " + err.message);
+    }
+  });
+}
+
+// تحقق من تسجيل الدخول
+const loggedInUser = localStorage.getItem("username");
+
+if (!loggedInUser) {
+  alert("الرجاء تسجيل الدخول أولاً!");
+  window.location.href = "login.html";
+} else {
+  const header = document.querySelector(".header");
+  const userStatus = document.createElement("div");
+  userStatus.style.position = "absolute";
+  userStatus.style.top = "15px";
+  userStatus.style.right = "15px";
+  userStatus.style.color = "#00bfff";
+  userStatus.style.fontWeight = "bold";
+  userStatus.style.cursor = "pointer";
+  userStatus.textContent = `المستخدم: ${loggedInUser} | تسجيل خروج`;
+
+  userStatus.onclick = () => {
+    localStorage.removeItem("username");
+    localStorage.removeItem("userId");
+    window.location.href = "login.html";
   };
 
-  try {
-    const res = await fetch("https://fbi-mrmd.onrender.com/api/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newPerson)
-    });
-
-    const data = await res.json();
-    alert(data.message || "Person added!");
-  } catch (err) {
-    alert("Error adding person: " + err.message);
-  }
-});
+  header.appendChild(userStatus);
+}
 </script>
+
 
 
 
