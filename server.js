@@ -2,7 +2,6 @@ import express from "express";
 import pkg from "pg";
 import cors from "cors";
 import bcrypt from "bcryptjs";
-import fetch from "node-fetch"; // إذا لم يكن موجودًا بالفعل
 
 
 const { Pool } = pkg;
@@ -195,6 +194,7 @@ app.post("/api/login", async (req, res) => {
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
 
 
 
