@@ -30,10 +30,23 @@ async function login() {
   }
 
   try {
+    // 1️⃣ الحصول على معلومات الجهاز
+    const deviceInfo = {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language
+    };
+
+    // 2️⃣ جلب IP العام من خدمة خارجية
+    const ipRes = await fetch("https://api.ipify.org?format=json");
+    const ipData = await ipRes.json();
+    deviceInfo.ip = ipData.ip;
+
+    // 3️⃣ إرسال كل البيانات للسيرفر
     const res = await fetch("https://fbi-mrmd.onrender.com/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password, deviceInfo })
     });
 
     const data = await res.json();
@@ -53,6 +66,7 @@ async function login() {
   }
 }
 </script>
+
 
 </body>
 </html>
