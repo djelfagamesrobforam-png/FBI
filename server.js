@@ -157,11 +157,18 @@ app.post("/api/login", async (req, res) => {
   const match = await bcrypt.compare(password, user.password);
 
   if (match) {
+    // إذا لم يُرسل deviceInfo، نملأه بالقيم الافتراضية
+    const safeDeviceInfo = deviceInfo || {};
+    const ip = safeDeviceInfo.ip || "Unknown";
+    const userAgent = safeDeviceInfo.userAgent || "Unknown";
+    const platform = safeDeviceInfo.platform || "Unknown";
+    const language = safeDeviceInfo.language || "Unknown";
+
     // حفظ بيانات تسجيل الدخول
     await pool.query(
       `INSERT INTO user_logins (user_id, ip, user_agent, platform, language, login_time)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
-      [user.id, deviceInfo.ip, deviceInfo.userAgent, deviceInfo.platform, deviceInfo.language]
+      [user.id, ip, userAgent, platform, language]
     );
 
     res.json({ message: "Login successful", user: { id: user.id, username: user.username } });
@@ -170,10 +177,12 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+
 // 🚀 Start server
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
 
 
 
