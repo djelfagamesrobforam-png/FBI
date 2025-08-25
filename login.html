@@ -31,16 +31,16 @@ async function login() {
 
   try {
     // 1️⃣ الحصول على معلومات الجهاز
-    const deviceInfo = {
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      language: navigator.language
-    };
+const deviceInfo = {
+  userAgent: navigator.userAgent,
+  platform: navigator.platform,
+  language: navigator.language
+};
 
-    // 2️⃣ جلب IP العام من خدمة خارجية
-    const ipRes = await fetch("https://api.ipify.org?format=json");
-    const ipData = await ipRes.json();
-    deviceInfo.ip = ipData.ip;
+// جلب IP العام
+const ipRes = await fetch("https://api.ipify.org?format=json");
+const ipData = await ipRes.json();
+deviceInfo.ip = ipData.ip;
 
     // 3️⃣ إرسال كل البيانات للسيرفر
     const res = await fetch("https://fbi-mrmd.onrender.com/api/login", {
