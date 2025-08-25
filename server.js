@@ -2,6 +2,7 @@ import express from "express";
 import pkg from "pg";
 import cors from "cors";
 import bcrypt from "bcryptjs";
+import fetch from "node-fetch"; // إذا لم يكن موجودًا بالفعل
 
 
 const { Pool } = pkg;
@@ -156,32 +157,45 @@ app.post("/api/login", async (req, res) => {
   const user = result.rows[0];
   const match = await bcrypt.compare(password, user.password);
 
-  if (match) {
-    // إذا لم يُرسل deviceInfo، نملأه بالقيم الافتراضية
-    const safeDeviceInfo = deviceInfo || {};
-    const ip = safeDeviceInfo.ip || "Unknown";
-    const userAgent = safeDeviceInfo.userAgent || "Unknown";
-    const platform = safeDeviceInfo.platform || "Unknown";
-    const language = safeDeviceInfo.language || "Unknown";
+  if (!match) return res.json({ error: "Invalid password" });
 
-    // حفظ بيانات تسجيل الدخول
-    await pool.query(
-      `INSERT INTO user_logins (user_id, ip, user_agent, platform, language, login_time)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
-      [user.id, ip, userAgent, platform, language]
-    );
+  // معلومات الجهاز
+  const safeDeviceInfo = deviceInfo || {};
+  const ip = safeDeviceInfo.ip || "Unknown";
+  const userAgent = safeDeviceInfo.userAgent || "Unknown";
+  const platform = safeDeviceInfo.platform || "Unknown";
+  const language = safeDeviceInfo.language || "Unknown";
 
-    res.json({ message: "Login successful", user: { id: user.id, username: user.username } });
-  } else {
-    res.json({ error: "Invalid password" });
+  // جلب الدولة والمنطقة من IP
+  let country = "Unknown";
+  let region = "Unknown";
+
+  if (ip !== "Unknown") {
+    try {
+      const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
+      const geoData = await geoRes.json();
+      country = geoData.country_name || "Unknown";
+      region = geoData.region || geoData.city || "Unknown";
+    } catch (err) {
+      console.log("GeoIP fetch error:", err.message);
+    }
   }
-});
 
+  // حفظ بيانات تسجيل الدخول
+  await pool.query(
+    `INSERT INTO user_logins (user_id, ip, user_agent, platform, language, country, region, login_time)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
+    [user.id, ip, userAgent, platform, language, country, region]
+  );
+
+  res.json({ message: "Login successful", user: { id: user.id, username: user.username } });
+});
 
 // 🚀 Start server
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
 
 
 
