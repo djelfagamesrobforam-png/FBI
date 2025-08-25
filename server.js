@@ -78,6 +78,23 @@ app.delete("/api/delete/:id", async (req, res) => {
 });
 
 // ✅ تحديث شخص
+// ✅ البحث عن شخص بالـ ID
+app.get("/api/person/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query("SELECT * FROM people WHERE id = $1", [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "❌ Person not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ تحديث بيانات شخص
 app.put("/api/update/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -87,24 +104,29 @@ app.put("/api/update/:id", async (req, res) => {
       children, wanted, image
     } = req.body;
 
-    await pool.query(
-      `UPDATE people SET 
-        name=$1, birthplace=$2, birthdate=$3, current_age=$4,
-        records=$5, belongings=$6, marital_status=$7,
-        children=$8, wanted=$9, image=$10
-      WHERE id=$11`,
+    const result = await pool.query(
+      `UPDATE people 
+       SET name=$1, birthplace=$2, birthdate=$3, current_age=$4, records=$5,
+           belongings=$6, marital_status=$7, children=$8, wanted=$9, image=$10
+       WHERE id=$11 RETURNING *`,
       [name, birthplace, birthdate, current_age, records, belongings, marital_status, children, wanted, image, id]
     );
 
-    res.json({ message: "✅ Updated successfully" });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "❌ Person not found" });
+    }
+
+    res.json({ message: "✅ Person updated successfully", person: result.rows[0] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 
+
 // 🚀 Start server
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
 
