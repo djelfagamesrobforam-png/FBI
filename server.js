@@ -1,12 +1,14 @@
 import express from "express";
 import pkg from "pg";
 import cors from "cors";
+import bcrypt from "bcrypt";   // ✅ لازم
 
 const { Pool } = pkg;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
 
 // ✅ Connect to PostgreSQL on Render
 const pool = new Pool({
@@ -124,9 +126,46 @@ app.put("/api/update/:id", async (req, res) => {
 
 
 
+app.post("/api/register", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) return res.json({ error: "Missing fields" });
+
+  const hashed = await bcrypt.hash(password, 10);
+
+  try {
+    await pool.query("INSERT INTO users (username, password) VALUES ($1, $2)", [username, hashed]);
+    res.json({ message: "User registered successfully!" });
+  } catch (err) {
+    if (err.code === "23505") { // unique violation
+      res.json({ error: "Username already exists" });
+    } else {
+      res.json({ error: err.message });
+    }
+  }
+});
+
+// ✅ تسجيل الدخول
+app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  const result = await pool.query("SELECT * FROM users WHERE username=$1", [username]);
+  if (result.rows.length === 0) return res.json({ error: "User not found" });
+
+  const user = result.rows[0];
+  const match = await bcrypt.compare(password, user.password);
+
+  if (match) {
+    res.json({ message: "Login successful", user: { id: user.id, username: user.username } });
+  } else {
+    res.json({ error: "Invalid password" });
+  }
+});
+
 // 🚀 Start server
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
 
 
