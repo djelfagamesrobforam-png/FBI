@@ -1,7 +1,8 @@
 import express from "express";
 import pkg from "pg";
 import cors from "cors";
-import bcrypt from "bcrypt";   // ✅ لازم
+import bcrypt from "bcryptjs";
+
 
 const { Pool } = pkg;
 
@@ -166,6 +167,7 @@ app.post("/api/login", async (req, res) => {
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
 
 
 
