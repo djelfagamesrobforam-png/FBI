@@ -54,7 +54,57 @@ app.post("/api/add", async (req, res) => {
   }
 });
 
+
+
+// ✅ عرض كل الأشخاص
+app.get("/api/people", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM people ORDER BY id DESC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ حذف شخص
+app.delete("/api/delete/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM people WHERE id=$1", [id]);
+    res.json({ message: "❌ Deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ تحديث شخص
+app.put("/api/update/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      name, birthplace, birthdate, current_age,
+      records, belongings, marital_status,
+      children, wanted, image
+    } = req.body;
+
+    await pool.query(
+      `UPDATE people SET 
+        name=$1, birthplace=$2, birthdate=$3, current_age=$4,
+        records=$5, belongings=$6, marital_status=$7,
+        children=$8, wanted=$9, image=$10
+      WHERE id=$11`,
+      [name, birthplace, birthdate, current_age, records, belongings, marital_status, children, wanted, image, id]
+    );
+
+    res.json({ message: "✅ Updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // 🚀 Start server
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
