@@ -295,6 +295,28 @@ app.put("/api/users/approve/:id", async (req, res) => {
 
 
 
+// ✅ التحقق من IP إذا محظور
+app.get("/api/check-ip", async (req, res) => {
+  try {
+    const { ip } = req.query;
+    if (!ip) return res.status(400).json({ error: "IP is required" });
+
+    const result = await pool.query("SELECT * FROM blocked_ips WHERE ip=$1", [ip]);
+
+    if (result.rows.length > 0) {
+      return res.json({
+        blocked: true,
+        reason: result.rows[0].reason || "🚫 This IP is blocked",
+        blocked_at: result.rows[0].blocked_at
+      });
+    }
+
+    res.json({ blocked: false });
+  } catch (err) {
+    console.error("check-ip error:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 
 
