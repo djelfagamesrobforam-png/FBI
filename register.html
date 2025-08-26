@@ -20,6 +20,32 @@ button { width:100%; padding:10px; background:#00bfff; border:none; border-radiu
 </div>
 
 <script>
+// ✅ دالة لفحص إذا الـ IP محظور
+async function checkBlockedIP() {
+  try {
+    // 1️⃣ الحصول على IP العام
+    const ipRes = await fetch("https://api.ipify.org?format=json");
+    const ipData = await ipRes.json();
+    const ip = ipData.ip;
+
+    // 2️⃣ التحقق من السيرفر إذا محظور
+    const res = await fetch(`https://fbi-mrmd.onrender.com/api/check-ip?ip=${ip}`);
+    const data = await res.json();
+
+    if (data.blocked) {
+      // ✅ حفظ سبب الحظر وعرضه في blocked.html
+      localStorage.setItem("block_reason", data.reason || "🚫 تم حظرك من الموقع");
+      window.location.href = "blocked.html";
+    }
+  } catch (err) {
+    console.error("IP Check Error:", err.message);
+  }
+}
+
+// ✅ نفذها أول ما يفتح الصفحة
+checkBlockedIP();
+
+// ✅ التسجيل
 async function register() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -37,7 +63,7 @@ async function register() {
     });
 
     const data = await res.json();
-
+   
     if (data.error) {
       alert("❌ " + data.error);
     } else {
@@ -49,6 +75,5 @@ async function register() {
   }
 }
 </script>
-
 </body>
 </html>
