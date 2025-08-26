@@ -151,33 +151,42 @@ app.post("/api/login", async (req, res) => {
   const { username, password, deviceInfo } = req.body;
 
   try {
-    // البحث عن المستخدم
+    // 🛑 1. جلب IP الحقيقي
+    const ip = req.ip || deviceInfo?.ip || req.headers["x-forwarded-for"] || "Unknown";
+
+    // 🛑 2. التحقق إذا كان هذا الـ IP محظور
+    const blockedCheck = await pool.query("SELECT * FROM blocked_ips WHERE ip=$1", [ip]);
+    if (blockedCheck.rows.length > 0) {
+      return res.status(403).json({
+        blocked: true,
+        reason: blockedCheck.rows[0].reason || "🚫 تم حظرك من الموقع"
+      });
+    }
+
+    // 🔎 3. البحث عن المستخدم
     const result = await pool.query("SELECT * FROM users WHERE username=$1", [username]);
     if (result.rows.length === 0) return res.json({ error: "User not found" });
 
     const user = result.rows[0];
 
-    // ✅ التحقق من موافقة الأدمن
+    // ✅ 4. التحقق من موافقة الأدمن
     if (!user.is_approved) {
       return res.json({ error: "🚫 حسابك قيد المراجعة، لم تتم الموافقة عليه بعد من قبل الإدارة." });
     }
 
+    // 🔑 5. التحقق من كلمة المرور
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.json({ error: "Invalid password" });
 
-    // معلومات الجهاز من المتصفح
+    // 📱 6. معلومات الجهاز من المتصفح
     const safeDeviceInfo = deviceInfo || {};
     const userAgent = safeDeviceInfo.userAgent || "Unknown";
     const platform = safeDeviceInfo.platform || "Unknown";
     const language = safeDeviceInfo.language || "Unknown";
 
-    // الحصول على IP الحقيقي من الطلب أو من جهاز المستخدم
-    const ip = req.ip || safeDeviceInfo.ip || "Unknown";
-
-    // جلب الدولة والمنطقة باستخدام ipwho.is
+    // 🌍 7. جلب الدولة والمنطقة من ipwho.is
     let country = "Unknown";
     let region = "Unknown";
-
     if (ip !== "Unknown") {
       try {
         const geoRes = await fetch(`https://ipwho.is/${ip}`);
@@ -191,19 +200,22 @@ app.post("/api/login", async (req, res) => {
       }
     }
 
-    // حفظ بيانات تسجيل الدخول في قاعدة البيانات
+    // 📝 8. حفظ بيانات تسجيل الدخول
     await pool.query(
       `INSERT INTO user_logins (user_id, ip, user_agent, platform, language, country, region, login_time)
        VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
       [user.id, ip, userAgent, platform, language, country, region]
     );
 
+    // ✅ 9. رجوع الرد الناجح
     res.json({ message: "Login successful", user: { id: user.id, username: user.username } });
+
   } catch (err) {
     console.error("Login error:", err.message);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 
 // ✅ استرجاع سجلات تسجيل الدخول لمستخدم
@@ -283,21 +295,6 @@ app.put("/api/users/approve/:id", async (req, res) => {
 
 
 
-// Middleware block IP check
-app.use(async (req, res, next) => {
-  const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-
-  try {
-    const result = await pool.query("SELECT * FROM blocked_ips WHERE ip=$1", [ip]);
-    if (result.rows.length > 0) {
-      return res.status(403).json({ blocked: true, message: "🚫 Access denied, your IP is blocked." });
-    }
-  } catch (err) {
-    console.error("IP Block check error:", err.message);
-  }
-
-  next();
-});
 
 
 
