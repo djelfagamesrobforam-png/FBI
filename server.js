@@ -200,9 +200,26 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+// ✅ استرجاع سجلات تسجيل الدخول لمستخدم
+app.get("/api/logins/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM user_logins WHERE user_id=$1 ORDER BY login_time DESC",
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
 
 
 
