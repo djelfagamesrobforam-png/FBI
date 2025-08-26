@@ -281,6 +281,59 @@ app.put("/api/users/approve/:id", async (req, res) => {
   }
 });
 
+
+
+// Middleware block IP check
+app.use(async (req, res, next) => {
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+  try {
+    const result = await pool.query("SELECT * FROM blocked_ips WHERE ip=$1", [ip]);
+    if (result.rows.length > 0) {
+      return res.status(403).json({ blocked: true, message: "🚫 Access denied, your IP is blocked." });
+    }
+  } catch (err) {
+    console.error("IP Block check error:", err.message);
+  }
+
+  next();
+});
+
+
+
+// Block IP
+app.post("/api/block-ip", async (req, res) => {
+  const { ip, reason } = req.body;
+  try {
+    await pool.query("INSERT INTO blocked_ips (ip, reason) VALUES ($1,$2) ON CONFLICT (ip) DO NOTHING", [ip, reason]);
+    res.json({ message: `✅ IP ${ip} blocked successfully` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Unblock IP
+app.delete("/api/block-ip/:ip", async (req, res) => {
+  try {
+    const { ip } = req.params;
+    await pool.query("DELETE FROM blocked_ips WHERE ip=$1", [ip]);
+    res.json({ message: `✅ IP ${ip} unblocked successfully` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all blocked IPs
+app.get("/api/blocked-ips", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM blocked_ips ORDER BY blocked_at DESC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
+
