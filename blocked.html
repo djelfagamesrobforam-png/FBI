@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>🚫 محظور</title>
+<style>
+body { background:#111; color:white; font-family:Arial; display:flex; justify-content:center; align-items:center; height:100vh; }
+.container { background:#1e1e1e; padding:30px; border-radius:10px; width:350px; text-align:center; }
+h2 { color:red; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>🚫 تم حظرك</h2>
+  <p id="reason">سبب الحظر: غير محدد</p>
+</div>
+<script>
+document.getElementById("reason").innerText = "سبب الحظر: " + (localStorage.getItem("block_reason") || "غير محدد");
+</script>
+</body>
+</html>
