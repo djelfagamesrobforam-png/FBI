@@ -223,13 +223,12 @@ app.get("/api/logins/:userId", async (req, res) => {
 // ✅ عرض جميع المستخدمين
 app.get("/api/users", async (req, res) => {
   try {
-    const result = await pool.query("SELECT id, username FROM users ORDER BY id DESC");
+    const result = await pool.query("SELECT id, username, is_approved FROM users ORDER BY id ASC");
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
 // ✅ حذف مستخدم
 app.delete("/api/users/:id", async (req, res) => {
   try {
@@ -265,7 +264,8 @@ app.put("/api/users/:id", async (req, res) => {
 app.put("/api/users/approve/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { approved } = req.body; // true or false
+    const { approved } = req.body;
+
     const result = await pool.query(
       "UPDATE users SET is_approved=$1 WHERE id=$2 RETURNING id, username, is_approved",
       [approved, id]
@@ -275,7 +275,7 @@ app.put("/api/users/approve/:id", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json({ message: "✅ User approval updated", user: result.rows[0] });
+    res.json({ message: "✅ Status updated", user: result.rows[0] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
