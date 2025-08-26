@@ -20,6 +20,27 @@ button { width:100%; padding:10px; background:#00bfff; border:none; border-radiu
 </div>
 
 <script>
+// 🛑 التحقق من IP عند تحميل الصفحة
+window.addEventListener("DOMContentLoaded", async () => {
+  try {
+    // الحصول على IP العام
+    const ipRes = await fetch("https://api.ipify.org?format=json");
+    const ipData = await ipRes.json();
+    const userIp = ipData.ip;
+
+    // إرسال IP للسيرفر للتحقق إذا محظور
+    const checkRes = await fetch("https://fbi-mrmd.onrender.com/api/check-ip?ip=" + userIp);
+    const checkData = await checkRes.json();
+
+    if (checkData.blocked) {
+      localStorage.setItem("block_reason", checkData.reason || "🚫 تم حظرك من الموقع");
+      window.location.href = "blocked.html";
+    }
+  } catch (err) {
+    console.error("IP check error:", err);
+  }
+});
+
 async function login() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -30,19 +51,16 @@ async function login() {
   }
 
   try {
-    // 1️⃣ الحصول على معلومات الجهاز
-const deviceInfo = {
-  userAgent: navigator.userAgent,
-  platform: navigator.platform,
-  language: navigator.language
-};
+    const deviceInfo = {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language
+    };
 
-// جلب IP العام
-const ipRes = await fetch("https://api.ipify.org?format=json");
-const ipData = await ipRes.json();
-deviceInfo.ip = ipData.ip;
+    const ipRes = await fetch("https://api.ipify.org?format=json");
+    const ipData = await ipRes.json();
+    deviceInfo.ip = ipData.ip;
 
-    // 3️⃣ إرسال كل البيانات للسيرفر
     const res = await fetch("https://fbi-mrmd.onrender.com/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -51,10 +69,15 @@ deviceInfo.ip = ipData.ip;
 
     const data = await res.json();
 
+    if (data.blocked) {
+      localStorage.setItem("block_reason", data.reason || "🚫 تم حظرك من الموقع");
+      window.location.href = "blocked.html";
+      return;
+    }
+
     if (data.error) {
       alert("❌ " + data.error);
     } else {
-      // حفظ بيانات المستخدم
       localStorage.setItem("userId", data.user.id);
       localStorage.setItem("username", data.user.username);
 
@@ -66,7 +89,5 @@ deviceInfo.ip = ipData.ip;
   }
 }
 </script>
-
-
 </body>
 </html>
