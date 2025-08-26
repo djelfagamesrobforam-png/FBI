@@ -126,8 +126,6 @@ app.put("/api/update/:id", async (req, res) => {
   }
 });
 
-
-
 app.post("/api/register", async (req, res) => {
   const { username, password } = req.body;
 
@@ -158,6 +156,12 @@ app.post("/api/login", async (req, res) => {
     if (result.rows.length === 0) return res.json({ error: "User not found" });
 
     const user = result.rows[0];
+
+    // ✅ التحقق من موافقة الأدمن
+    if (!user.is_approved) {
+      return res.json({ error: "🚫 حسابك قيد المراجعة، لم تتم الموافقة عليه بعد من قبل الإدارة." });
+    }
+
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.json({ error: "Invalid password" });
 
@@ -201,6 +205,7 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+
 // ✅ استرجاع سجلات تسجيل الدخول لمستخدم
 app.get("/api/logins/:userId", async (req, res) => {
   try {
@@ -214,10 +219,6 @@ app.get("/api/logins/:userId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-
-
-
 
 // ✅ عرض جميع المستخدمين
 app.get("/api/users", async (req, res) => {
@@ -261,17 +262,25 @@ app.put("/api/users/:id", async (req, res) => {
 });
 
 
+app.put("/api/users/approve/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approved } = req.body; // true or false
+    const result = await pool.query(
+      "UPDATE users SET is_approved=$1 WHERE id=$2 RETURNING id, username, is_approved",
+      [approved, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "✅ User approval updated", user: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(5000, () =>
   console.log("🚀 Server running on https://fbi-mrmd.onrender.com/")
 );
-
-
-
-
-
-
-
-
-
-
-
