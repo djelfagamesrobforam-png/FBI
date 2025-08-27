@@ -173,6 +173,50 @@ input[type="text"]:focus {
 .logo-clickable {
   cursor: pointer;
 }
+  /* 📱 تنسيق خاص بالهاتف */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .container {
+    margin: 15px auto;
+    padding: 0 10px;
+  }
+
+  input[type="text"] {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .person-profile {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .person-profile img {
+    width: 150px;
+    height: 150px;
+  }
+
+  .person-info {
+    width: 100%;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .info-section label {
+    font-size: 13px;
+  }
+
+  .status {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -347,3 +391,4 @@ if (!loggedInUser) {
 
 </body>
 </html>
+
