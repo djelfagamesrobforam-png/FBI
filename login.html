@@ -4,10 +4,120 @@
 <meta charset="UTF-8" />
 <title>تسجيل الدخول</title>
 <style>
-body { background:#111; color:white; font-family:Arial; display:flex; justify-content:center; align-items:center; height:100vh; }
-.container { background:#1e1e1e; padding:30px; border-radius:10px; width:300px; text-align:center; }
-input { width:100%; padding:10px; margin:10px 0; border:none; border-radius:5px; background:#2b2b2b; color:white; }
-button { width:100%; padding:10px; background:#00bfff; border:none; border-radius:5px; color:white; font-size:16px; }
+body {
+  background: radial-gradient(circle at center, #000 20%, #0a0a0a 100%);
+  color: #fff;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* خلفية Matrix */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0,255,0,0.05),
+    rgba(0,255,0,0.05) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  animation: scan 6s linear infinite;
+  z-index: 0;
+}
+@keyframes scan {
+  from { background-position-y: 0; }
+  to { background-position-y: 100%; }
+}
+
+/* الصندوق */
+.container {
+  position: relative;
+  background: rgba(15,15,15,0.95);
+  padding: 40px 45px;
+  border-radius: 12px;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0,255,0,0.3), inset 0 0 10px rgba(255,0,0,0.2);
+  border: 1px solid rgba(0,255,0,0.2);
+  z-index: 1;
+}
+
+/* شعار */
+.container::before {
+  content: "FBI SECURE ACCESS";
+  display: block;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: #0f0;
+  text-shadow: 0 0 10px #0f0;
+  margin-bottom: 20px;
+}
+
+/* العنوان */
+.container h2 {
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #ff3c3c;
+  text-shadow: 0 0 10px #ff0000;
+}
+
+/* الحقول */
+input {
+  width: 100%;
+  padding: 14px;
+  margin: 14px 0;
+  border: 1px solid #0f0;
+  border-radius: 6px;
+  background: #111;
+  color: #0f0;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s;
+  font-family: "Courier New", monospace;
+}
+input:focus {
+  border-color: #ff0000;
+  box-shadow: 0 0 15px #ff0000;
+  background: #000;
+}
+
+/* زر الدخول */
+button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(90deg, #ff0000, #660000);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 0 15px #ff0000;
+  transition: 0.3s;
+}
+button:hover {
+  background: linear-gradient(90deg, #0f0, #006600);
+  box-shadow: 0 0 25px #0f0, 0 0 40px #00ff00;
+}
+
+/* الروابط */
+a {
+  color: #0f0;
+  text-decoration: none;
+  transition: 0.3s;
+}
+a:hover {
+  text-shadow: 0 0 10px #00ff00;
+}
 </style>
 </head>
 <body>
@@ -16,19 +126,17 @@ button { width:100%; padding:10px; background:#00bfff; border:none; border-radiu
   <input type="text" id="username" placeholder="اسم المستخدم">
   <input type="password" id="password" placeholder="كلمة المرور">
   <button onclick="login()">دخول</button>
-  <p>ليس لديك حساب؟ <a href="register.html" style="color:#00bfff">إنشاء حساب</a></p>
+  <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
 </div>
 
 <script>
 // 🛑 التحقق من IP عند تحميل الصفحة
 window.addEventListener("DOMContentLoaded", async () => {
   try {
-    // الحصول على IP العام
     const ipRes = await fetch("https://api.ipify.org?format=json");
     const ipData = await ipRes.json();
     const userIp = ipData.ip;
 
-    // إرسال IP للسيرفر للتحقق إذا محظور
     const checkRes = await fetch("https://fbi-mrmd.onrender.com/api/check-ip?ip=" + userIp);
     const checkData = await checkRes.json();
 
