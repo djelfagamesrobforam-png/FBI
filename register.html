@@ -4,10 +4,99 @@
 <meta charset="UTF-8" />
 <title>إنشاء حساب</title>
 <style>
-body { background:#111; color:white; font-family:Arial; display:flex; justify-content:center; align-items:center; height:100vh; }
-.container { background:#1e1e1e; padding:30px; border-radius:10px; width:300px; text-align:center; }
-input { width:100%; padding:10px; margin:10px 0; border:none; border-radius:5px; background:#2b2b2b; color:white; }
-button { width:100%; padding:10px; background:#00bfff; border:none; border-radius:5px; color:white; font-size:16px; }
+body {
+  background: radial-gradient(circle at center, #0a0a0a, #000);
+  color: #fff;
+  font-family: "Courier New", monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* خلفية خطوط متحركة */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: linear-gradient(rgba(255,0,0,0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,0,0,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  animation: moveGrid 10s linear infinite;
+  z-index: 0;
+}
+@keyframes moveGrid {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 100px 100px, 100px 100px; }
+}
+
+.container {
+  position: relative;
+  background: rgba(20,20,20,0.9);
+  padding: 30px;
+  border-radius: 12px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(255,0,0,0.6);
+  z-index: 1;
+  border: 1px solid rgba(255,0,0,0.4);
+}
+
+.container h2 {
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #ff2e2e;
+  text-shadow: 0 0 10px #ff0000;
+}
+
+input {
+  width: 100%;
+  max-width: 280px; /* ✅ عرض مضبوط مو طويل بزيادة */
+  padding: 10px;
+  margin: 12px 0;
+  border: 1px solid #ff0000;
+  border-radius: 6px;
+  background: #111;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
+}
+input:focus {
+  border-color: #ff2e2e;
+  box-shadow: 0 0 12px #ff2e2e;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg, #ff0000, #660000);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 0 15px #ff0000;
+  transition: 0.3s;
+}
+button:hover {
+  background: linear-gradient(90deg, #660000, #ff0000);
+  box-shadow: 0 0 25px #ff2e2e, 0 0 40px #ff0000;
+}
+
+a {
+  color: #ff2e2e;
+  text-decoration: none;
+  transition: 0.3s;
+}
+a:hover {
+  text-shadow: 0 0 10px #ff0000;
+}
 </style>
 </head>
 <body>
@@ -16,24 +105,21 @@ button { width:100%; padding:10px; background:#00bfff; border:none; border-radiu
   <input type="text" id="username" placeholder="اسم المستخدم">
   <input type="password" id="password" placeholder="كلمة المرور">
   <button onclick="register()">تسجيل</button>
-  <p>لديك حساب؟ <a href="login.html" style="color:#00bfff">تسجيل الدخول</a></p>
+  <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
 </div>
 
 <script>
-// ✅ دالة لفحص إذا الـ IP محظور
+// ✅ فحص الـ IP إذا محظور
 async function checkBlockedIP() {
   try {
-    // 1️⃣ الحصول على IP العام
     const ipRes = await fetch("https://api.ipify.org?format=json");
     const ipData = await ipRes.json();
     const ip = ipData.ip;
 
-    // 2️⃣ التحقق من السيرفر إذا محظور
     const res = await fetch(`https://fbi-mrmd.onrender.com/api/check-ip?ip=${ip}`);
     const data = await res.json();
 
     if (data.blocked) {
-      // ✅ حفظ سبب الحظر وعرضه في blocked.html
       localStorage.setItem("block_reason", data.reason || "🚫 تم حظرك من الموقع");
       window.location.href = "blocked.html";
     }
@@ -41,8 +127,6 @@ async function checkBlockedIP() {
     console.error("IP Check Error:", err.message);
   }
 }
-
-// ✅ نفذها أول ما يفتح الصفحة
 checkBlockedIP();
 
 // ✅ التسجيل
